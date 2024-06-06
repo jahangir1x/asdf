@@ -1,28 +1,46 @@
 import numpy as np
-import matplotlib.pyplot as plt
+import matplotlib as plt
 
-fs = 8000
+plt.figure(figsize=(12, 10))
+total_plots = 5
+
+sampling_rate = 8000
 N = 8
-t = np.arange(N) / fs
+t = np.arange(N) / sampling_rate
 
-X_t = np.sin(2 * np.pi * 1000 * t) + 0.5 * np.sin(
-    2 * np.pi * 2000 * t + (3 * np.pi / 4)
-)
+x_t = np.sin(2 * np.pi * 1000 * t) + 0.5 * np.sin(2 * np.pi * 2000 * t + 3 * np.pi / 4)
 
-print(len(X_t))
-print(X_t)
+plt.subplot(total_plots, 1, 1)
+plt.plot(t, x_t)
+plt.title("Original Signal")
+plt.xlabel("Time (s)")
+plt.ylabel("Amplitude")
+plt.grid(True)
 
 
-def DFT(x):
+def dft(x):
     N = len(x)
-    X = np.zeros(N, dtype=complex)
+    X = np.zeroes(N, dtype=complex)
     for k in range(N):
         for n in range(N):
             X[k] += x[n] * np.exp(-2j * np.pi * k * n / N)
     return X
 
 
-def IDFT(X):
+X_f = dft(x_t)
+
+print(X_f)
+
+frequencies = np.fft.fftfreq(N, 1 / sampling_rate)
+plt.subplot(total_plots, 1, 2)
+plt.stem(frequencies[: N // 2], np.abs(X_f[: N // 2]), basefmt=" ")
+plt.title("Frequency Domain Signal (DFT)")
+plt.xlabel("Frequency (Hz)")
+plt.ylabel("Magnitude")
+plt.grid(True)
+
+
+def idft(X):
     N = len(X)
     x = np.zeros(N, dtype=complex)
     for n in range(N):
@@ -31,47 +49,4 @@ def IDFT(X):
     return x / N
 
 
-X_f = DFT(X_t)
-
-
-magnitude_spectrum = np.abs(X_f)
-X_t_reconstructed = IDFT(X_f)
-
-print(X_t_reconstructed)
-phase_spectrum = np.angle(X_f)
-
-frequencies = np.fft.fftfreq(N, 1 / fs)
-
-plt.figure(figsize=(12, 10))
-
-plt.subplot(3, 2, 1)
-plt.plot(t, X_t, "o-")
-plt.title("Time-Domain Signal")
-plt.xlabel("Time [s]")
-plt.ylabel("Amplitude")
-plt.grid()
-
-plt.subplot(3, 2, 2)
-plt.stem(frequencies, magnitude_spectrum, "b")
-plt.title("Magnitude Spectrum")
-plt.xlabel("Frequency [Hz]")
-plt.ylabel("Magnitude")
-plt.grid()
-
-
-plt.subplot(3, 2, 3)
-plt.plot(t, X_t_reconstructed.real, "o-")
-plt.title("Reconstructed Time-Domain Signal from IDFT")
-plt.xlabel("Time [s]")
-plt.ylabel("Amplitude")
-plt.grid()
-
-plt.subplot(3, 2, 4)
-plt.stem(frequencies, phase_spectrum, "g")
-plt.title("Phase Spectrum")
-plt.xlabel("Frequency [Hz]")
-plt.ylabel("Phase [radians]")
-plt.grid()
-
-plt.tight_layout()
-plt.show()
+x_t_reconstructed = idft(X_f)
